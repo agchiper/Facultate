@@ -44,8 +44,8 @@ void inmultire(float *matrix1, float *matrix2, int a, int b, int c) {
 
 /* Functie afisare spirala. Afisam extremitatile matricei iar apoi micsoram matricea.
 Spre exemplu, daca avem matricea 0 0 0
-								 3 4 1
-								 2 2 1
+				 3 4 1
+				 2 2 1
 Pasul 1: afisam 0,0,0
 Pasul 2: afisam 1,1
 Pasul 3: afisam 2,2
