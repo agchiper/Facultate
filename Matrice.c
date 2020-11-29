@@ -1,58 +1,92 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <conio.h>
 
-// Functie adunare si scadere.
-void adunare(float *matrix1, float *matrix2, int n1, int c1, int selectie) {
-	float* matrix3 = (float*)malloc(n1*c1 * sizeof(float));
-	for (int i = 0; i < n1; i++) {
-		for (int j = 0; j < c1; j++) {
-			if (selectie == 1) *(matrix3 + i*c1 + j) = *(matrix1 + i*c1 + j) + *(matrix2 + i*c1 + j);
-			else *(matrix3 + i*c1 + j) = *(matrix1 + i*c1 + j) - *(matrix2 + i*c1 + j);
-		}
+void printare(float *matrix, int r, int c) {
+	for (int p = 0; p < r*c; p++) {
+		if (p == 0) goto print;
+		else if (p % c == 0) printf("\n");
+	print:
+		printf("%g ", *(matrix + (p / c) * c + (p % c)));
 	}
-	printf("Matricea rezultanta este:\n");
-	for (int i = 0; i < n1; i++) {
-		for (int j = 0; j < c1; j++) {
-			printf("%g ", *(matrix3 + i*c1 + j));
-			if (j == c1 - 1) printf("\n");
-		}
-	}
+	printf("\n");
 }
 
-// Functie inmultire.  
-void inmultire(float *matrix1, float *matrix2, int a, int b, int c) {
-	float*rezultat = (float*)malloc(a*c * sizeof(float));
-	float element = 0;
-	for (int i = 0; i < a; i++) {
-		for (int j = 0; j < c; j++) {
-			for (int k = 0; k < b; k++) {
-				element += *(matrix1 + i*b + k) * *(matrix2 + k*c + j);
+void adunare(float *matrix1, float *matrix2, int rows, int columns, int selectie) {
+	float* matrix3 = (float*)malloc(rows*columns * sizeof(float));
+	for (int i = 0; i < rows*columns; i++) {
+		if (selectie == 1) *(matrix3 + (i / columns)*columns + (i%columns)) = *(matrix1 + (i / columns)*columns + (i%columns)) + *(matrix2 + (i / columns)*columns + (i%columns));
+		else *(matrix3 + (i / columns)*columns + (i%columns)) = *(matrix1 + (i / columns)*columns + (i%columns)) - *(matrix2 + (i / columns)*columns + (i%columns));
+	}
+	printare(matrix3, rows, columns);
+}
+
+// De p ne folosim pentru a accesa pozitiile matricei 3. De k ne folosim pentru a itera pe coloanele matricei1 si liniile matricei 2.
+void inmultire(float *matrix1, float *matrix2, int r, int rc, int c) {
+	float* matrix3 = (float*)malloc(r*c * sizeof(float));
+	for (int p = 0; p < r*c; p++) {
+		*(matrix3 + (p / c)*c + (p%c)) = 0;
+		for (int k = 0; k < rc; k++) {
+			*(matrix3 + (p / c)*c + (p%c)) += *(matrix1 + (p / rc)*rc + k) * *(matrix2 + k*c + (p%c));
+		}
+	}
+	printare(matrix3, r, c);
+}
+
+int exponent(float *matrix2, int n, int e) {
+	// Functie exponent. Algoritmul functioneaza in urmatorul fel:
+	// Pasul 1: Definim o matrice M identica cu cea initiala M2.
+	// Pasul 2: Inmultim matricea M cu matricea initiala M2 si stocam rezultatul in M3.
+	// Pasul 3: Inlocuim Mij cu M3ij
+	// ...
+
+	// Daca exponentul este 0, rezultatul este matricea identitate.
+	if (e == 0) {
+		for (int i = 0; i < n*n; i++) {
+			if (i%n == 0) printf("\n");
+			if ((i / n) == (i%n)) printf("%d", 1);
+			else printf("%d", 0);
+		}
+		return 0;
+	}
+	else {
+		// Verificam daca toate elementele matricei sunt 0. Daca sunt, afisam matricea zero.
+		for (int i = 0, verificare_m0 = 0; i < n*n; i++) {
+			if (*(matrix2 + (i / n)*n + (i%n))) break;
+			if (i == (n*n)-1) {
+				for (int j = 0; j < n*n; j++) {
+					if (j%n == 0) printf("\n");
+					printf("%d", 0);
+					if (j == (n*n)-1) return 0;
+				}
 			}
-			*(rezultat + i*c + j) = element;
-			element = 0;
 		}
-	}
-	printf("Matricea rezultanta este:\n");
-	for (int i = 0; i < a; i++) {
-		for (int j = 0; j < c; j++) {
-			printf("%g ", *(rezultat + i*c + j));
+		float* matrix = (float*)malloc(n*n * sizeof(float));
+		float* matrix3 = (float*)malloc(n*n * sizeof(float));
+		for (int i = 0; i < n*n; i++) *(matrix + (i / n)*n + (i%n)) = *(matrix2 + (i / n)*n + (i%n));
+		for (int exp = 0; exp < (e - 1); exp++) {
+			for (int i = 0; i < n*n; i++) {
+				*(matrix3 + (i / n)*n + (i%n)) = 0;
+				for (int k = 0; k < n; k++) *(matrix3 + (i / n)*n + (i%n)) += *(matrix + (i / n)*n + k) * *(matrix2 + k*n + (i%n));
+			}
+			for (int i = 0; i < n*n; i++) *(matrix + (i / n)*n + (i%n)) = *(matrix3 + (i / n)*n + (i%n));
 		}
-		printf("\n");
+		printare(matrix3, n, n);
+		return 0;
 	}
 }
 
-
-/* Functie afisare spirala. Afisam extremitatile matricei iar apoi micsoram matricea.
-Spre exemplu, daca avem matricea 0 0 0
-				 3 4 1
-				 2 2 1
-Pasul 1: afisam 0,0,0
-Pasul 2: afisam 1,1
-Pasul 3: afisam 2,2
-Pasul 4: afisam 3
-Pasul 5: afisam 4
-*/
 int spiral(float mat[], int linii, int coloane) {
+	/* Functie afisare spirala. Afisam extremitatile matricei iar apoi micsoram matricea.
+	Spre exemplu, daca avem matricea 0 0 0
+	3 4 1
+	2 2 1
+	Pasul 1: afisam 0,0,0
+	Pasul 2: afisam 1,1
+	Pasul 3: afisam 2,2
+	Pasul 4: afisam 3
+	Pasul 5: afisam 4
+	*/
 	int n = linii - 1, c = coloane - 1, ni = 0, ci = 0, contor = 0;
 	while (1) {
 		for (int j = ci; j <= c; j++) {
@@ -82,25 +116,35 @@ int spiral(float mat[], int linii, int coloane) {
 	}
 }
 
-/* Functie determinant. Pentru matrice > 2x2, mai intai verificam daca exista vreo linie sau coloana cu toate
-elementele = 0 sau daca exista doua linii sau coloane egale. Ratinamentul pentru calcularea determinantului
-este urmatorul: Definim o matrice U cu toate elementele de sub diagonala ca fiind egale cu 0 si inca o matrice L cu toate
-elementele de deasupra diagonalei ca fiind egale cu 0 dar cu elementele de pe diagonala egale cu 1. Apoi aflam restul de
-elemente ale matricei U folosindu-ne de urmatoarea formula:
-i = 0 -> Uij = Aij
-i > 0 -> Uij = Aij - [Suma(k=0)(k<i): Lik*Ukj]
-Apoi aflam restul de elemente ale matricei L folosindu-ne de urmatoarea formula:
-j = 0 -> Lij = Aij / Ujj
-j > 0 -> Lij = {Aij - [Suma(k=0)(k<j): Lik*Ukj]} / Ujj
-Determinantul matricei initiale este egal cu produsul elementelor de pe diagonala matricei U.
-Algoritmul functioneaza in urmatorul fel:
-// Pasul 1: se calculeaza linia 0 a matricei U (i=0 si j merge de la i la n-1)
-// Pasul 2: se calculeaza coloana 0 a matricei L (deci j=0 si si i merge de j+1 la n-1)
-// Pasul 3: se calculeaza linia 1 matricei U (deci i=1 si j merge de la i la n-1)
-// Pasul 4: se calculeaza coloana 1 a matricei L (deci j = 1 si i merge de la j+1 la n-1)
-// .......
-*/
-float det(float mat[], int n, int afisare) {
+void transpusa(float *matrix, int n, int c) {
+	float *matrix2 = (float*)malloc(n*c * sizeof(float));
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < c; j++) {
+			*(matrix2 + j*n + i) = *(matrix + i*c + j);
+		}
+	}
+	printare(matrix2, c, n);
+}
+
+float det(float *mat, int n, int afisare) {
+	/* Functie determinant. Pentru matrice > 2x2, mai intai verificam daca exista vreo linie sau coloana cu toate
+	elementele = 0 sau daca exista doua linii sau coloane egale. Ratinamentul pentru calcularea determinantului
+	este urmatorul: Definim o matrice U cu toate elementele de sub diagonala ca fiind egale cu 0 si inca o matrice L cu toate
+	elementele de deasupra diagonalei ca fiind egale cu 0 dar cu elementele de pe diagonala egale cu 1. Apoi aflam restul de
+	elemente ale matricei U folosindu-ne de urmatoarea formula:
+	i = 0 -> Uij = Aij
+	i > 0 -> Uij = Aij - [Suma(k=0)(k<i): Lik*Ukj]
+	Apoi aflam restul de elemente ale matricei L folosindu-ne de urmatoarea formula:
+	j = 0 -> Lij = Aij / Ujj
+	j > 0 -> Lij = {Aij - [Suma(k=0)(k<j): Lik*Ukj]} / Ujj
+	Determinantul matricei initiale este egal cu produsul elementelor de pe diagonala matricei U.
+	Algoritmul functioneaza in urmatorul fel:
+	// Pasul 1: se calculeaza linia 0 a matricei U (i=0 si j merge de la i la n-1)
+	// Pasul 2: se calculeaza coloana 0 a matricei L (deci j=0 si si i merge de j+1 la n-1)
+	// Pasul 3: se calculeaza linia 1 matricei U (deci i=1 si j merge de la i la n-1)
+	// Pasul 4: se calculeaza coloana 1 a matricei L (deci j = 1 si i merge de la j+1 la n-1)
+	// .......
+	*/
 	switch (n) {
 	case 1:
 		if (afisare == 1) printf("Determinantul este %g.", *mat);
@@ -182,69 +226,15 @@ float det(float mat[], int n, int afisare) {
 		}
 	}
 }
-// TRANSPUSA
-void transpusa(float *matrix, int n, int c) {
-	float *matrix2 = (float*)malloc(n*c * sizeof(float));
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < c; j++) {
-			*(matrix2 + j*n + i) = *(matrix + i*c + j);
-		}
-	}
-	for (int i = 0; i < c; i++) {
-		for (int j = 0; j < n; j++) {
-			printf("%g", *(matrix2 + i*n + j));
-		}
-		printf("\n");
-	}
-}
 
-// Functie exponent. Algoritmul functioneaza in urmatorul fel:
-// Pasul 1: Definim o matrice M identica cu cea initiala M2.
-// Pasul 2: Inmultim matricea M cu matricea initiala M2 si stocam rezultatul in M3.
-// Pasul 3: Inlocuim Mij cu M3ij
-// ...
-void exponent(float *matrix2, int n, int e) {
-	float* matrix = (float*)malloc(n*n * sizeof(float));
-	float* matrix3 = (float*)malloc(n*n * sizeof(float));
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n; j++) {
-			*(matrix + i*n + j) = *(matrix2 + i*n + j);
-		}
-	}
-	for (int exp = 0; exp < (e - 1); exp++) {
-		float element = 0;
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				for (int k = 0; k < n; k++) {
-					element += *(matrix + i*n + k) * *(matrix2 + k*n + j);
-				}
-				*(matrix3 + i*n + j) = element;
-				element = 0;
-			}
-		}
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				*(matrix + i*n + j) = *(matrix3 + i*n + j);
-			}
-		}
-	}
-	printf("Matricea rezultanta este:\n");
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n; j++) {
-			printf("%g ", *(matrix3 + i*n + j));
-		}
-		printf("\n");
-	}
-}
-
-/* Functie inversa. Algoritmul functioneaza in urmatorul mod:
-Pasul 1: Pentru fiecare element Mij, stergem linia i si coloana j si stocam rezultatul in cofactor.
-Pasul 2: Aflam determinantul matricei cofactor.
-Pasul 3: Adjoint[i][j] = determinantul de la 2.
-Pasul 4: Aflam transpusa matricei adjoint
-Pasul 5: Pentru fiecare element al matricei inverse, I[i][j] = adjoint[i][j] / determinantul matricei initiale.
-*/
 void inversa(float *matrix, int n, float determinant_matrix) {
+	/* Functie inversa. Algoritmul functioneaza in urmatorul mod:
+	Pasul 1: Pentru fiecare element Mij, stergem linia i si coloana j si stocam rezultatul in cofactor.
+	Pasul 2: Aflam determinantul matricei cofactor.
+	Pasul 3: Adjoint[i][j] = determinantul de la 2.
+	Pasul 4: Aflam transpusa matricei adjoint
+	Pasul 5: Pentru fiecare element al matricei inverse, I[i][j] = adjoint[i][j] / determinantul matricei initiale.
+	*/
 	float *cofactor = (float*)malloc((n - 1)*(n - 1) * sizeof(float));
 	float *adjoint = (float*)malloc(n*n * sizeof(float));
 	float *transpose = (float*)malloc(n*n * sizeof(float));
@@ -306,135 +296,122 @@ void inversa(float *matrix, int n, float determinant_matrix) {
 }
 
 
-
-void main() {
-	char intrebare = ' ';
-	while (intrebare != '1' && intrebare != '2') {
-		printf("Doriti sa efectuati operatii asupra unei singure matrice(1) sau asupra a doua matrice(2)?");
-		scanf("%c", &intrebare);
+int main() {
+	int operatie;
+	printf("Operatiile pe care acest program le poate efectua sunt:\n1.Adunare.\n2.Scadere.\n3.Inmultire.\n4.Ridicare la putere.\n5.Afisare in spirala.\n6.Aflare transpusa.\n7.Aflare determinant.\n8.Aflare inversa.\nIntroduceti numarul operatiei dorite: ");
+	scanf("%d", &operatie);
+	while (operatie != 1 && operatie != 2 && operatie != 3 && operatie != 4 && operatie != 5 && operatie != 6 && operatie != 7 && operatie != 8) {
+		printf("Numar incorect. Introduceti numarul operatiei dorite: ");
+		scanf("%d", &operatie);
 	}
-	if (intrebare == '2') {
-		int n1, c1, n2, c2;
-		printf("Introduceti numarul de linii pentru prima matrice: ");
-		scanf("%d", &n1);
-		printf("Introduceti numarul de coloane pentru prima matrice: ");
+	if (operatie == 1 || operatie == 2 || operatie == 3) {
+		int r1, c1, r2, c2;
+		printf("Introduceti numarul de linii pentru M1: ");
+		scanf("%d", &r1);
+		printf("Introduceti numarul de coloane pentru M1: ");
 		scanf("%d", &c1);
-		printf("Introduceti numarul de linii pentru a doua matrice: ");
-		scanf("%d", &n2);
-		printf("Introduceti numarul de coloane pentru a doua matrice: ");
+		printf("Introduceti numarul de linii pentru M2: ");
+		scanf("%d", &r2);
+		printf("Introduceti numarul de coloane pentru M2: ");
 		scanf("%d", &c2);
-		float *matrix1 = (float*)malloc(n1*c1 * sizeof(float));
-		float *matrix2 = (float*)malloc(n2*c2 * sizeof(float));
-		for (int i = 0; i < n1; i++) {
-			for (int j = 0; j < c1; j++) {
-				printf("Introduceti elementul %d:%d al primei matrice: ", i, j);
-				scanf("%f", &*(matrix1 + i*c1 + j));
+		if (operatie == 1 || operatie == 2) {
+			if (!(r1 == r2 && c1 == c2)) {
+				printf("Pentru a putea aduna sau scadea doua matrici, acestea trebuie sa aiba acelasi numar de linii si coloane!.\n");
+				printf("Introduceti numarul de linii pentru M1: ");
+				scanf("%d", &r1);
+				printf("Introduceti numarul de coloane pentru M1: ");
+				scanf("%d", &c1);
+				printf("Introduceti numarul de linii pentru M2: ");
+				scanf("%d", &r2);
+				printf("Introduceti numarul de coloane pentru M2: ");
+				scanf("%d", &c2);
 			}
 		}
-		for (int i = 0; i < n2; i++) {
-			for (int j = 0; j < c2; j++) {
-				printf("Introduceti elementul %d:%d al matricei 2: ", i, j);
-				scanf("%f", &*(matrix2 + i*c2 + j));
+		if (operatie == 3) {
+			if (!(c1 == r2)) {
+				printf("Pentru a putea inmulti doua matrici, numarul de coloane pentru M1 trebuie sa fie egal cu numarul de linii pentru M2!.\n");
+				printf("Introduceti numarul de linii pentru M1: ");
+				scanf("%d", &r1);
+				printf("Introduceti numarul de coloane pentru M1 si numarul de linii pentru M2: ");
+				scanf("%d", &c1);
+				printf("Introduceti numarul de coloane pentru M2: ");
+				scanf("%d", &c2);
 			}
 		}
-		printf("Acest program poate efectua asupra a doua matrice urmatoarele operatii (introduceti numarul aferent operatiei dorite):\n1.Adunare.\n2.Scadere.\n3.Inmultire.\n");
-		intrebare = ' ';
-		scanf(" %c", &intrebare);
-		switch (intrebare) {
-		case '1':
-			if (!(n1 == n2 && c1 == c2)) {
-				printf("Eroare. Operatia de adunare poate fi efectuata doar asupra matricelor cu dimensiuni egale!");
-				break;
-			}
-			else {
-				adunare(matrix1, matrix2, n1, c1, 1);
-				break;
-			}
-		case '2':
-			if (!(n1 == n2 && c1 == c2)) {
-				printf("Eroare. Operatia de scadere poate fi efectuata doar asupra matricelor cu dimensiuni egale!");
-				break;
-			}
-			else {
-				adunare(matrix1, matrix2, n1, c1, 0);
-				break;
-			}
-		case '3':
-			if (!(c1 == n2)) {
-				printf("Eroare. Operatia de inmultire poate fi efectuata doar atunci cand numarul de coloane al primei matrice este egal cu numarul de linii al matricei 2!");
-				break;
-			}
-			else {
-				int a = n1, b = c1, c = c2;
-				inmultire(matrix1, matrix2, n1, c1, c2);
-				break;
-			}
+		float *matrix1 = (float*)malloc(r1*c1 * sizeof(float));
+		float *matrix2 = (float*)malloc(r2*c2 * sizeof(float));
+		for (int p = 0; p < r1 * c1; p++) {
+			printf("Introduceti elementul %d:%d pentru M1: ", p / c1, p%c1);
+			scanf("%f", &*(matrix1 + (p / c1)*c1 + (p%c1)));
 		}
-		int h;
-		scanf("%d", &h);
+		for (int p = 0; p < r2 * c2; p++) {
+			printf("Introduceti elementul %d:%d pentru M2: ", p / c2, p%c2);
+			scanf("%f", &*(matrix2 + (p / c2)*c2 + (p%c2)));
+		}
+		switch (operatie) {
+		case 1 :
+			printf("Matricea rezultanta in urma operatiei de adunare este:\n");
+			adunare(matrix1, matrix2, r1, c1, 1);
+			break;
+		case 2:
+			printf("Matricea rezultanta in urma operatiei de scadere este:\n");
+			adunare(matrix1, matrix2, r1, c1, 0);
+			break;
+		case 3:
+			printf("Matricea rezultanta in urma operatiei de inmultire este:\n");
+			inmultire(matrix1, matrix2, r1, c1, c2);
+			break;
+		}
 	}
 	else {
-		int n, c;
-		printf("Introduceti numarul de linii:");
-		scanf("%d", &n);
-		printf("Introduceti numarul de coloane:");
+		int r, c;
+		printf("Introduceti numarul de linii: ");
+		scanf("%d", &r);
+		printf("Introduceti numarul de coloane: ");
 		scanf("%d", &c);
-		float* matrix = (float*)malloc(n*c * sizeof(float));
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < c; j++) {
-				printf("Introduceti elementul %d:%d : ", i, j);
-				scanf("%f", &*(matrix + i*c + j));
-			}
+		float *matrix = (float*)malloc(r*c * sizeof(float));
+		for (int p = 0; p < r * c; p++) {
+			printf("Introduceti elementul %d:%d: ", p / c, p%c);
+			scanf("%f", &*(matrix + (p / c)*c + (p%c)));
 		}
-		intrebare = ' ';
-		while (intrebare != '1' && intrebare != '2' && intrebare != '3' && intrebare != '4' && intrebare != '5' && intrebare != '6') {
-			printf("Acest program poate efectua asupra unei matrice urmatoarele operatii (introduceti numarul aferent operatiei dorite):\n1.Afisare spirala.\n2.Aflare determinant.\n3.Aflare transpusa.\n4.Aflare inversa.\n5.Ridicare la putere.");
-			scanf(" %c", &intrebare);
-		}
-		switch (intrebare) {
-		case '1':
-			spiral(matrix, n, c);
+		switch (operatie) {
+		case 4:
+			while (!(r == c)) {
+				printf("Doar matricele care au un numar egal de linii si coloane pot fi ridicate la putere!\nIntroduceti numarul de linii si coloane: ");
+				scanf("%d", &r);
+			}
+			int exp;
+			printf("Introduceti exponentul: ");
+			scanf("%d", &exp);
+			printf("Matricea obtinuta in urma ridicarii la putere este:\n");
+			exponent(matrix, r, exp);
 			break;
-		case '2':
-			if (!(n == c)) {
-				printf("Eroare. Doar matricele care au un numar de linii egal cu cel al coloanelor au determinant!");
-				break;
-			}
-			else {
-				det(matrix, n, 1);
-				break;
-			}
-		case '3':
-			transpusa(matrix, n, c);
+		case 5:
+			printf("Matricea afisata in spirala este: ");
+			spiral(matrix, r, c);
 			break;
-		case '4':
-			if (!(n == c)) {
-				printf("Eroare. Doar matricele care au un numar de linii egal cu cel al coloanelor au inversa!.");
-				break;
+		case 6:
+			printf("Matricea transpusa este:\n");
+			transpusa(matrix, r, c);
+			break;
+		case 7:
+			while (!(r == c)) {
+				printf("Numarul de linii trebuie sa fie egal cu numarul de coloane!\nIntroduceti numarul de linii si coloane: ");
+				scanf("%d", r);
 			}
-			else {
-				float determinant = det(matrix, n, 0);
-				if (determinant == 0) {
-					printf("Matricea nu are inversa.");
-					break;
-				}
-				else {
-					inversa(matrix, n, determinant);
-					break;
-				}
+			det(matrix, r, 1);
+			break;
+		case 8:
+			while (!(r == c)) {
+				printf("Numarul de linii trebuie sa fie egal cu numarul de coloane!\nIntroduceti numarul de linii si coloane: ");
+				scanf("%d", r);
 			}
-		case '5':
-			if (!(n == c)) {
-				printf("Eroare. Doar matricele care au un numar de linii egal cu cel al coloanelor pot fi ridicate la o putere!");
-				break;
-			}
-			else {
-				int putere;
-				printf("Introduceti o putere: ");
-				scanf("%d", &putere);
-				exponent(matrix, n, putere);
-				break;
-			}
+			int determinant = det(matrix, r, 0);
+			if (determinant == 0) printf("Matricea nu are inversa!");
+			else inversa(matrix, r, determinant);
+			break;
 		}
 	}
+	_getch();
+	return 0;
 }
