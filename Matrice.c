@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <conio.h>
 
-void printare(float *matrix, int r, int c) {
+
+void afisare_mat(float *matrix, int r, int c) {
 	for (int p = 0; p < r*c; p++) {
 		if (p == 0) goto print;
 		else if (p % c == 0) printf("\n");
@@ -12,35 +13,41 @@ void printare(float *matrix, int r, int c) {
 	printf("\n");
 }
 
+
+
 void adunare(float *matrix1, float *matrix2, int rows, int columns, int selectie) {
 	float* matrix3 = (float*)malloc(rows*columns * sizeof(float));
+	
 	for (int i = 0; i < rows*columns; i++) {
 		if (selectie == 1) *(matrix3 + (i / columns)*columns + (i%columns)) = *(matrix1 + (i / columns)*columns + (i%columns)) + *(matrix2 + (i / columns)*columns + (i%columns));
 		else *(matrix3 + (i / columns)*columns + (i%columns)) = *(matrix1 + (i / columns)*columns + (i%columns)) - *(matrix2 + (i / columns)*columns + (i%columns));
 	}
-	printare(matrix3, rows, columns);
+	afisare_mat(matrix3, rows, columns);
 }
 
-// De p ne folosim pentru a accesa pozitiile matricei 3. De k ne folosim pentru a itera pe coloanele matricei1 si liniile matricei 2.
+
 void inmultire(float *matrix1, float *matrix2, int r, int rc, int c) {
 	float* matrix3 = (float*)malloc(r*c * sizeof(float));
-	for (int p = 0; p < r*c; p++) {
-		*(matrix3 + (p / c)*c + (p%c)) = 0;
-		for (int k = 0; k < rc; k++) {
+	
+	for (int p = 0; p < r*c; p++) {		// De p ne folosim pentru a accesa pozitiile matricei3.
+		*(matrix3 + (p / c)*c + (p%c)) = 0; 
+		for (int k = 0; k < rc; k++) {  // De k ne folosim pentru a itera pe coloanele matricei1 si liniile matricei2
 			*(matrix3 + (p / c)*c + (p%c)) += *(matrix1 + (p / rc)*rc + k) * *(matrix2 + k*c + (p%c));
 		}
 	}
-	printare(matrix3, r, c);
+	afisare_mat(matrix3, r, c);
 }
 
+
 int exponent(float *matrix2, int n, int e) {
+	
 	// Functie exponent. Algoritmul functioneaza in urmatorul fel:
 	// Pasul 1: Definim o matrice M identica cu cea initiala M2.
 	// Pasul 2: Inmultim matricea M cu matricea initiala M2 si stocam rezultatul in M3.
 	// Pasul 3: Inlocuim Mij cu M3ij
 	// ...
-
 	// Daca exponentul este 0, rezultatul este matricea identitate.
+	
 	if (e == 0) {
 		for (int i = 0; i < n*n; i++) {
 			if (i%n == 0) printf("\n");
@@ -71,23 +78,27 @@ int exponent(float *matrix2, int n, int e) {
 			}
 			for (int i = 0; i < n*n; i++) *(matrix + (i / n)*n + (i%n)) = *(matrix3 + (i / n)*n + (i%n));
 		}
-		printare(matrix3, n, n);
+		afisare_mat(matrix3, n, n);
 		return 0;
 	}
 }
 
+
 int spiral(float mat[], int linii, int coloane) {
+	
 	/* Functie afisare spirala. Afisam extremitatile matricei iar apoi micsoram matricea.
 	Spre exemplu, daca avem matricea 0 0 0
-	3 4 1
-	2 2 1
+					 3 4 1
+					 2 2 1
 	Pasul 1: afisam 0,0,0
 	Pasul 2: afisam 1,1
 	Pasul 3: afisam 2,2
 	Pasul 4: afisam 3
 	Pasul 5: afisam 4
 	*/
+	
 	int n = linii - 1, c = coloane - 1, ni = 0, ci = 0, contor = 0;
+	
 	while (1) {
 		for (int j = ci; j <= c; j++) {
 			printf("%g ", *(mat + ni*coloane + j));
@@ -118,15 +129,17 @@ int spiral(float mat[], int linii, int coloane) {
 
 void transpusa(float *matrix, int n, int c) {
 	float *matrix2 = (float*)malloc(n*c * sizeof(float));
+	
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < c; j++) {
 			*(matrix2 + j*n + i) = *(matrix + i*c + j);
 		}
 	}
-	printare(matrix2, c, n);
+	afisare_mat(matrix2, c, n);
 }
 
 float det(float *mat, int n, int afisare) {
+	
 	/* Functie determinant. Pentru matrice > 2x2, mai intai verificam daca exista vreo linie sau coloana cu toate
 	elementele = 0 sau daca exista doua linii sau coloane egale. Ratinamentul pentru calcularea determinantului
 	este urmatorul: Definim o matrice U cu toate elementele de sub diagonala ca fiind egale cu 0 si inca o matrice L cu toate
@@ -145,6 +158,7 @@ float det(float *mat, int n, int afisare) {
 	// Pasul 4: se calculeaza coloana 1 a matricei L (deci j = 1 si i merge de la j+1 la n-1)
 	// .......
 	*/
+	
 	switch (n) {
 	case 1:
 		if (afisare == 1) printf("Determinantul este %g.", *mat);
@@ -228,6 +242,7 @@ float det(float *mat, int n, int afisare) {
 }
 
 void inversa(float *matrix, int n, float determinant_matrix) {
+	
 	/* Functie inversa. Algoritmul functioneaza in urmatorul mod:
 	Pasul 1: Pentru fiecare element Mij, stergem linia i si coloana j si stocam rezultatul in cofactor.
 	Pasul 2: Aflam determinantul matricei cofactor.
@@ -235,12 +250,14 @@ void inversa(float *matrix, int n, float determinant_matrix) {
 	Pasul 4: Aflam transpusa matricei adjoint
 	Pasul 5: Pentru fiecare element al matricei inverse, I[i][j] = adjoint[i][j] / determinantul matricei initiale.
 	*/
+	
 	float *cofactor = (float*)malloc((n - 1)*(n - 1) * sizeof(float));
 	float *adjoint = (float*)malloc(n*n * sizeof(float));
 	float *transpose = (float*)malloc(n*n * sizeof(float));
 	float *inverse = (float*)malloc(n*n * sizeof(float));
 	int row = 0, column = 0, a = 0, b = 0, k1 = 0, k2 = 0;
 	float determinant;
+	
 	while (true) {
 		// Calculare cofactor.
 		k1 = 0;
